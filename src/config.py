@@ -8,6 +8,8 @@ from pydantic_settings import BaseSettings
 
 from dotenv import load_dotenv
 
+load_dotenv()
+
 class Settings(BaseSettings):
     
     # aws configuration
@@ -22,16 +24,30 @@ class Settings(BaseSettings):
         description="The model ID for the embedding model to use in Bedrock.",
     )
     
-    llm_model_id: str = Field(
-        default="us.anthropic.claude-sonnet-4-20250514-v1:0",
-        env="BEDROCK_LLM_MODEL_ID",
-        description="The model ID for the LLM to use in Bedrock.",
-    )
+    # llm_model_id: str = Field(
+    #     default="us.anthropic.claude-sonnet-4-20250514-v1:0",
+    #     env="BEDROCK_LLM_MODEL_ID",
+    #     description="The model ID for the LLM to use in Bedrock.",
+    # )
     
-    # pipecone configuration
-    pinecone_api_key: str = Field(..., env="PINECONE_API_KEY")
-    pinecone_env: str = Field(..., env="PINECONE_ENVIRONMENT")
-    pinecone_index_name: str = Field(default="rag-index", env="PINECONE_INDEX_NAME")
+    # # pipecone configuration
+    # pinecone_api_key: str = Field(..., env="PINECONE_API_KEY")
+    # pinecone_env: str = Field(..., env="PINECONE_ENVIRONMENT")
+    # pinecone_index_name: str = Field(default="rag-index", env="PINECONE_INDEX_NAME")
     
-    # Text processing configuration
+    # # Text processing configuration
+    
+@lru_cache()
+def get_settings() -> Settings:
+    return Settings()
+
+def get_aws_region() -> str:
+    return get_settings().aws_region
+
+def get_bedrock_config() -> dict:
+    settings = get_settings()
+    return {
+        "region": settings.aws_region,
+        "embedding_model_id": settings.embedding_model_id,
+    }
     
