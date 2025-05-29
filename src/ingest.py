@@ -3,7 +3,8 @@
 class DocumentIngestor:
     
     def __init__(self):
-        pass
+        """Initialize ingestor with AWS and pipecone clients"""
+        
     
     def _setup_clients(self):
         pass
