@@ -1,4 +1,4 @@
-from typing import List
+from typing import Any, Dict, List
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -8,6 +8,9 @@ import os
 import json
 
 import logging
+
+import hashlib
+import pathlib
 
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -87,10 +90,12 @@ class DocumentIngestor:
         except Exception as e:
             raise
     
-    def create_document_id(self, text):
-        pass
-    
-    def process_document(self, text: str):
+    def create_document_id(self, source: str, chunk_index: int) -> str:
+        content = f"{source}:{chunk_index}"
+        
+        return hashlib.md5(content.encode('utf-8')).hexdigest()
+        
+    def process_document(self, file_path: pathlib.Path) -> List[Dict[str, Any]]:
         pass
 
     def ingest_to_pinecone(self, text: str):
@@ -112,9 +117,14 @@ def main():
     
     doc_ingestor = DocumentIngestor()
     
-    emds = doc_ingestor.generate_embeddings("Hello from AWS embedding!")
+    text_splitter = doc_ingestor.create_document_id("test", 0)
     
-    print("Generated Embeddings: ", emds, "\n")
+    print("Text Splitter: ", text_splitter, "\n")
+
+    
+    # emds = doc_ingestor.generate_embeddings("Hello from AWS embedding!")
+    
+    # print("Generated Embeddings: ", emds, "\n")
     
     # input_text = "Hello from AWs embedding!"
     
