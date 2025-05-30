@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings
 
 from dotenv import load_dotenv
 
-load_dotenv(".env", override=True)
+load_dotenv()
 
 class Settings(BaseSettings):
     
@@ -36,6 +36,26 @@ class Settings(BaseSettings):
     pinecone_index_name: Optional[str] = Field(default="rag-demo-index", env="PINECONE_INDEX_NAME")
     
     # # Text processing configuration
+    chunk_size: int = Field(
+        default=800,
+        env="TEXT_CHUNK_SIZE",
+        description="The size of text chunks to split documents into for processing.",
+    )
+    
+    chunk_overlap: int = Field(
+        default=100,
+        env="TEXT_CHUNK_OVERLAP",
+        description="The overlap size between text chunks.",
+    )
+    
+    
+    
+    class Config: 
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+        extra = "ignore"
+    
     
 @lru_cache()
 def get_settings() -> Settings:

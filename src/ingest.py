@@ -8,6 +8,11 @@ import json
 
 import logging
 
+from langchain_community.document_loaders import TextLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from pinecone import Pinecone, ServerlessSpec
+
 from config import get_settings
 
 logger = logging.getLogger(__name__)
@@ -58,7 +63,10 @@ class DocumentIngestor:
             raise
     
     def _setup_text_splitter(self):
-        pass
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            
+        )
     
     def generate_embeddings(self, text: str):
         pass
