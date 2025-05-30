@@ -1,3 +1,4 @@
+from typing import List
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
@@ -64,12 +65,27 @@ class DocumentIngestor:
     
     def _setup_text_splitter(self):
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            
+            chunk_size=self.settings.chunk_size,
+            chunk_overlap=self.settings.chunk_overlap,
+            length_function=len   
         )
     
-    def generate_embeddings(self, text: str):
-        pass
+    def generate_embeddings(self, text: str) -> List[float]:
+        try:
+            response = self.bedrock_client.invoke_model(
+                modelId=self.settings.embedding_model_id,
+                body=json.dumps({"inputText": text}),
+                contentType="application/json",
+                accept="application/json",
+            )
+            
+            response_body = json.loads(response['body'].read())
+            embedding = response_body.get('embedding')
+            
+            return embedding
+        
+        except Exception as e:
+            raise
     
     def create_document_id(self, text):
         pass
@@ -95,6 +111,10 @@ def main():
     load_dotenv()
     
     doc_ingestor = DocumentIngestor()
+    
+    emds = doc_ingestor.generate_embeddings("Hello from AWS embedding!")
+    
+    print("Generated Embeddings: ", emds, "\n")
     
     # input_text = "Hello from AWs embedding!"
     
