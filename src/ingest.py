@@ -1,3 +1,4 @@
+import datetime
 from typing import Any, Dict, List
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
@@ -27,6 +28,7 @@ class DocumentIngestor:
         """Initialize ingestor with AWS and pipecone clients"""
         self.settings = get_settings()
         self._setup_clients()
+        self._setup_text_splitter()
            
     def _setup_clients(self):
         try: 
@@ -96,7 +98,47 @@ class DocumentIngestor:
         return hashlib.md5(content.encode('utf-8')).hexdigest()
         
     def process_document(self, file_path: pathlib.Path) -> List[Dict[str, Any]]:
-        pass
+        try:
+            loader = TextLoader(str(file_path), encoding='utf-8')
+            
+            documents = loader.load()
+            
+            if not documents:
+                return []
+            
+            chunks = self.text_splitter.split_documents(documents)
+            processed_chunks = []
+            
+            for i, chunk in enumerate(chunks):
+                
+                try:
+                    embedding = self.generate_embeddings(chunk.page_content)
+                    doc_id = self.create_document_id(str(file_path), i)
+                    
+                    metadata = {
+                        "text": chunk.page_content,
+                        "source": str(file_path),
+                        "chunk_index": i,
+                        "total_chunks": len(chunks),
+                        "file_name": file_path.name,
+                        "file_size": file_path.stat().st_size,
+                        "ingested_at": datetime.datetime.now().isoformat(),
+                        "text_lenght": len(chunk.page_content),
+                    }
+                    
+                    processed_chunks.append({
+                        "id": doc_id,
+                        "embedding": embedding,
+                        "metadata": metadata
+                    })
+                    
+                except Exception as e:
+                    continue
+                
+            return processed_chunks
+        
+        except Exception as e:
+            return []
 
     def ingest_to_pinecone(self, text: str):
         pass
@@ -117,35 +159,11 @@ def main():
     
     doc_ingestor = DocumentIngestor()
     
-    text_splitter = doc_ingestor.create_document_id("test", 0)
+    proccessed_docs = doc_ingestor.process_document(
+        pathlib.Path("test_data.txt")
+    )
     
-    print("Text Splitter: ", text_splitter, "\n")
-
-    
-    # emds = doc_ingestor.generate_embeddings("Hello from AWS embedding!")
-    
-    # print("Generated Embeddings: ", emds, "\n")
-    
-    # input_text = "Hello from AWs embedding!"
-    
-    # payload = {
-    #     'inputText': input_text,
-    # }
-    
-    # model_id = "amazon.titan-embed-text-v2:0"
-    
-    # response = doc_ingestor.bedrock_client.invoke_model(
-    #     modelId=model_id,
-    #     body=json.dumps(payload),
-    # )
-    
-    # print("Response: ", response, "\n")
-    
-
-    # response_body = json.loads(response['body'].read())
-    # embedding = response_body.get('embedding')
-    
-    # print("Embedding: ", embedding, "\n")
+    print(f"Processed \n{proccessed_docs}\n chunks from the document.")
 
 if __name__ == "__main__":
     main()

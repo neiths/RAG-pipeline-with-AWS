@@ -1,0 +1,9 @@
+Nếu bạn vẫn gặp lỗi, bạn có thể:
+
+Gửi cấu trúc thư mục dự án (tree), hoặc
+
+Gửi nội dung .env (giấu thông tin nhạy cảm), hoặc
+
+Cho biết bạn chạy file nào (python main.py, v.v.)
+
+Mình sẽ kiểm tra chính xác giúp bạn.
