@@ -41,9 +41,32 @@ class DocumentIngestor:
             
             self._test_bedrock_connection()
             
+            self.pc = Pinecone(
+                api_key=self.settings.pinecone_api_key,
+                environment=self.settings.pinecone_environment,
+            )
+            
+            if self.pc.has_index(self.settings.pinecone_index_name):
+                self.pc.create_index_for_model(
+                        name=self.settings.pinecone_index_name,
+                        cloud="aws",
+                        region=self.settings.aws_region,
+                        embed={
+                            "model":"llama-text-embed-v2",
+                            "field_map":{"text": "chunk_text"}
+                        }
+                    )
+            
+            self.pinecone_index = self.pc.Index(
+                self.settings.pinecone_index_name,
+            )
+            
+            # logger.info("Pinecone client initialized", index=self.settings.pinecone_index_name)
+            
         except NoCredentialsError:
             logger.error("AWS credentials not found. Please configure AWS CLI or set environment variables.")
             raise
+        
         except Exception as e:
             logger.error("Failed to initialize clients", error=str(e))
             raise
@@ -140,8 +163,39 @@ class DocumentIngestor:
         except Exception as e:
             return []
 
-    def ingest_to_pinecone(self, text: str):
-        pass
+    def ingest_to_pinecone(self, chunks: List[Dict[str, Any]], batch_size: int = 100):
+        
+        if not chunks:
+            logger.warning("No chunks to ingest")
+            return
+        
+        logger.info("Starting Pinecone ingestion", total_chunks=len(chunks))
+        
+        try:
+            for i in range(0, len(chunks), batch_size):
+                batch = chunks[i:i + batch_size]
+                
+                vectors = [
+                    (chunk['id'], chunk['embedding'], chunk['metadata']) 
+                    for chunk in batch
+                ]
+                
+                self.pinecone_index.upsert(
+                    vectors=vectors,
+                )
+                
+                logger.info(
+                    "Batch uploaded to Pinecone",
+                    batch_start=i,
+                    batch_size=len(batch),
+                    total_uploaded=min(i + batch_size, len(chunks))
+                )
+                
+            logger.info("Pinecone ingestion complete", total_chunks=len(chunks))
+            
+        except Exception as e:
+            logger.error("Failed to ingest to Pinecone", error=str(e))
+            raise
     
     def ingest_directory(self, directory: str):
         pass
@@ -159,11 +213,13 @@ def main():
     
     doc_ingestor = DocumentIngestor()
     
-    proccessed_docs = doc_ingestor.process_document(
+    proccessed_chunks = doc_ingestor.process_document(
         pathlib.Path("test_data.txt")
     )
     
-    print(f"Processed \n{proccessed_docs}\n chunks from the document.")
+    print(f"Processed \n{proccessed_chunks}\n chunks from the document.")
+    
+    doc_ingestor.ingest_to_pinecone(proccessed_chunks, 10)
 
 if __name__ == "__main__":
     main()
