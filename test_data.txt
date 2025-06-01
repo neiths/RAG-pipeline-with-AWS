@@ -1,9 +1,10 @@
-Nếu bạn vẫn gặp lỗi, bạn có thể:
-
-Gửi cấu trúc thư mục dự án (tree), hoặc
-
-Gửi nội dung .env (giấu thông tin nhạy cảm), hoặc
-
-Cho biết bạn chạy file nào (python main.py, v.v.)
-
-Mình sẽ kiểm tra chính xác giúp bạn.
+id: rec17 | score: 0.24  | category: history    | text: The Pyramids of Giza are among the Seven Wonders of the Ancient World.
+id: rec38 | score: 0.19  | category: history    | text: The Taj Mahal is a mausoleum built by Emperor Shah Jahan.
+id: rec5  | score: 0.19  | category: literature | text: Shakespeare wrote many famous plays, including Hamlet and Macbeth.
+id: rec15 | score: 0.11  | category: art        | text: Leonardo da Vinci painted the Mona Lisa.          
+id: rec50 | score: 0.1   | category: energy     | text: Renewable energy sources include wind, solar, and hydroelectric power.
+id: rec26 | score: 0.09  | category: history    | text: Rome was once the center of a vast empire.        
+id: rec47 | score: 0.08  | category: history    | text: The Industrial Revolution transformed manufacturing and transportation.
+id: rec7  | score: 0.07  | category: history    | text: The Great Wall of China was built to protect against invasions.
+id: rec1  | score: 0.07  | category: history    | text: The Eiffel Tower was completed in 1889 and stands in Paris, France.
+id: rec3  | score: 0.07  | category: science    | text: Albert Einstein developed the theory of relativity.

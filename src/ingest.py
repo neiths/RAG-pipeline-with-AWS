@@ -46,16 +46,16 @@ class DocumentIngestor:
                 environment=self.settings.pinecone_environment,
             )
             
-            if self.pc.has_index(self.settings.pinecone_index_name):
-                self.pc.create_index_for_model(
-                        name=self.settings.pinecone_index_name,
-                        cloud="aws",
-                        region=self.settings.aws_region,
-                        embed={
-                            "model":"llama-text-embed-v2",
-                            "field_map":{"text": "chunk_text"}
-                        }
-                    )
+            # if self.pc.has_index(self.settings.pinecone_index_name):
+            #     self.pc.create_index_for_model(
+            #             name=self.settings.pinecone_index_name,
+            #             cloud="aws",
+            #             region=self.settings.aws_region,
+            #             embed={
+            #                 "model":"llama-text-embed-v2",
+            #                 "field_map":{"text": "chunk_text"}
+            #             }
+            #         )
             
             self.pinecone_index = self.pc.Index(
                 self.settings.pinecone_index_name,
@@ -219,7 +219,7 @@ def main():
     
     print(f"Processed \n{proccessed_chunks}\n chunks from the document.")
     
-    doc_ingestor.ingest_to_pinecone(proccessed_chunks, 10)
+    doc_ingestor.ingest_to_pinecone(proccessed_chunks, 2)
 
 if __name__ == "__main__":
     main()
