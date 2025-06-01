@@ -30,12 +30,32 @@ class Settings(BaseSettings):
     #     description="The model ID for the LLM to use in Bedrock.",
     # )
     
-    # # pipecone configuration
-    # pinecone_api_key: str = Field(..., env="PINECONE_API_KEY")
-    # pinecone_env: str = Field(..., env="PINECONE_ENVIRONMENT")
-    # pinecone_index_name: str = Field(default="rag-index", env="PINECONE_INDEX_NAME")
+    # pipecone configuration
+    pinecone_api_key: str = Field(..., env="PIPECONE_API_KEY")
+    pinecone_environment: str = Field(..., env="PINECONE_ENVIRONMENT")
+    pinecone_index_name: Optional[str] = Field(default="rag-demo-index", env="PINECONE_INDEX_NAME")
     
     # # Text processing configuration
+    chunk_size: int = Field(
+        default=800,
+        env="TEXT_CHUNK_SIZE",
+        description="The size of text chunks to split documents into for processing.",
+    )
+    
+    chunk_overlap: int = Field(
+        default=100,
+        env="TEXT_CHUNK_OVERLAP",
+        description="The overlap size between text chunks.",
+    )
+    
+    
+    
+    class Config: 
+        env_file = ".env"
+        env_file_encoding = "utf-8"
+        case_sensitive = False
+        extra = "ignore"
+    
     
 @lru_cache()
 def get_settings() -> Settings:
@@ -49,5 +69,14 @@ def get_bedrock_config() -> dict:
     return {
         "region": settings.aws_region,
         "embedding_model_id": settings.embedding_model_id,
+    }
+    
+def get_pipecone_config() -> dict:
+    
+    settings = get_settings()
+    return {
+        "api_key": settings.pinecone_api_key,
+        "environment": settings.pinecone_environment,
+        "index_name": settings.pinecone_index_name,
     }
     
