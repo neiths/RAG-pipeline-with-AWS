@@ -197,8 +197,67 @@ class DocumentIngestor:
             logger.error("Failed to ingest to Pinecone", error=str(e))
             raise
     
-    def ingest_directory(self, directory: str):
-        pass
+    def ingest_directory(self, directory_path: str):
+
+        directory = pathlib.Path(directory_path)
+        
+        if not directory.exists():
+            logger.error("Directory does not exist", directory=str(directory))
+            return
+        
+        # Find all text files
+        text_files = list(directory.rglob("*.txt"))
+        
+        if not text_files:
+            logger.warning("No .txt files found in directory", directory=str(directory))
+            return
+        
+        logger.info("Starting directory ingestion", directory=str(directory), file_count=len(text_files))
+        
+        all_chunks = []
+        successful_files = 0
+        
+        for file_path in text_files:
+            try:
+                chunks = self.process_document(file_path)
+                all_chunks.extend(chunks)
+                successful_files += 1
+                
+            except Exception as e:
+                logger.error("Failed to process file", file_path=str(file_path), error=str(e))
+                continue
+        
+        if all_chunks:
+            self.ingest_to_pinecone(all_chunks)
+            
+            # Print summary
+            try:
+                index_stats = self.pinecone_index.describe_index_stats()
+                # index_stats_dict = self._serialize_index_stats(index_stats)
+            except Exception as e:
+                logger.warning("Failed to get index stats", error=str(e))
+                # index_stats_dict = {"error": "Unable to retrieve stats"}
+            
+            try:
+                logger.info(
+                    "Ingestion complete",
+                    files_processed=successful_files,
+                    total_files=len(text_files),
+                    chunks_ingested=len(all_chunks),
+                    index_stats=None
+                )
+            except Exception as e:
+                import traceback
+                logger.error("Failed to log completion message", error=str(e), traceback=traceback.format_exc())
+                # Fallback logging without index_stats
+                logger.info(
+                    "Ingestion complete (basic)",
+                    files_processed=successful_files,
+                    total_files=len(text_files),
+                    chunks_ingested=len(all_chunks)
+                )
+        else:
+            logger.warning("No chunks were successfully processed")
     
     def ingest_s3_bucket(self, bucket_name: str, prefix: str = ""):
         pass
@@ -213,13 +272,15 @@ def main():
     
     doc_ingestor = DocumentIngestor()
     
-    proccessed_chunks = doc_ingestor.process_document(
-        pathlib.Path("test_data.txt")
-    )
+    # proccessed_chunks = doc_ingestor.process_document(
+    #     pathlib.Path("test_data.txt")
+    # )
     
-    print(f"Processed \n{proccessed_chunks}\n chunks from the document.")
+    # print(f"Processed \n{proccessed_chunks}\n chunks from the document.")
     
-    doc_ingestor.ingest_to_pinecone(proccessed_chunks, 2)
+    # doc_ingestor.ingest_to_pinecone(proccessed_chunks, 2)
+    
+    doc_ingestor.ingest_directory("data")
 
 if __name__ == "__main__":
     main()
